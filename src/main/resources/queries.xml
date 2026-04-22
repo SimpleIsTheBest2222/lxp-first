@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<queries>
+    <query id="instructor.insert"><![CDATA[
+        INSERT INTO instructor (name, introduction)
+        VALUES (?, ?)
+    ]]></query>
+
+    <query id="instructor.existsById"><![CDATA[
+        SELECT 1
+        FROM instructor
+        WHERE id = ?
+    ]]></query>
+
+    <query id="instructor.findAll"><![CDATA[
+        SELECT id, name, introduction
+        FROM instructor
+        ORDER BY id ASC
+    ]]></query>
+
+    <query id="instructor.findById"><![CDATA[
+        SELECT id, name, introduction
+        FROM instructor
+        WHERE id = ?
+    ]]></query>
+
+    <query id="instructor.update"><![CDATA[
+        UPDATE instructor
+        SET name = ?, introduction = ?
+        WHERE id = ?
+    ]]></query>
+
+    <query id="instructor.deleteById"><![CDATA[
+        DELETE FROM instructor
+        WHERE id = ?
+    ]]></query>
+
+    <query id="course.insert"><![CDATA[
+        INSERT INTO course (title, description, price, level, instructor_id)
+        VALUES (?, ?, ?, ?, ?)
+    ]]></query>
+
+    <query id="course.existsById"><![CDATA[
+        SELECT 1
+        FROM course
+        WHERE id = ?
+    ]]></query>
+
+    <query id="content.insert"><![CDATA[
+        INSERT INTO content (title, content_type, content, seq, course_id)
+        VALUES (?, ?, ?, ?, ?)
+    ]]></query>
+</queries>

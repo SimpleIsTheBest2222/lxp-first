@@ -6,6 +6,9 @@ build/
 .kotlin
 
 ### IntelliJ IDEA ###
+/src/main/resources/config.yml
+.editorconfig
+gradle.properties
 AGENTS.md
 docs/
 .idea/
