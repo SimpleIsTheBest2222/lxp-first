@@ -1,3 +1,11 @@
+---
+name: Feature request
+about: 새로운 기능 제안을 등록합니다
+title: "[Feature] "
+labels: enhancement
+assignees: ""
+---
+
 ## 🚀 이슈 내용
 <!-- 어떤 기능인지 간단히 설명 -->
 - 
