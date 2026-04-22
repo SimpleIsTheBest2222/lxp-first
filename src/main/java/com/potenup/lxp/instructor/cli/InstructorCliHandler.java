@@ -67,6 +67,9 @@ public class InstructorCliHandler {
             }
             if (choice == 2) {
                 showListScreen();
+            } else {
+                System.out.println("잘못된 메뉴입니다.");
+                continue;
             }
             return;
         }
@@ -144,7 +147,8 @@ public class InstructorCliHandler {
         }
     }
 
-    private void showUpdateScreen(Instructor instructor) {
+    private void showUpdateScreen(Instructor currentInstructor) {
+        Instructor instructor = currentInstructor;
         while (true) {
             printTitle("강사 수정");
             System.out.println("빈 값 입력 시 기존 값이 유지됩니다.");
@@ -152,14 +156,14 @@ public class InstructorCliHandler {
             String introduction = readLine("소개(" + instructor.getIntroduction() + ") > ");
 
             try {
-                Instructor updatedInstructor = instructorController.updateInstructor(
+                instructor = instructorController.updateInstructor(
                         instructor.getId(),
                         new InstructorUpdateRequest(name, introduction)
                 );
                 System.out.println("수정되었습니다.");
-                System.out.println("강사 id: " + updatedInstructor.getId());
-                System.out.println("이름: " + updatedInstructor.getName());
-                System.out.println("소개: " + updatedInstructor.getIntroduction());
+                System.out.println("강사 id: " + instructor.getId());
+                System.out.println("이름: " + instructor.getName());
+                System.out.println("소개: " + instructor.getIntroduction());
             } catch (IllegalArgumentException exception) {
                 System.out.println(exception.getMessage());
                 continue;

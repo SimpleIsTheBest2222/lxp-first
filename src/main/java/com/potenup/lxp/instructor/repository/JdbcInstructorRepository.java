@@ -97,7 +97,10 @@ public class JdbcInstructorRepository implements InstructorRepository {
 			statement.setString(1, instructor.getName());
 			statement.setString(2, instructor.getIntroduction());
 			statement.setLong(3, instructor.getId());
-			statement.executeUpdate();
+			int affectedRows = statement.executeUpdate();
+			if (affectedRows == 0) {
+				throw new IllegalStateException("No instructor updated for id: " + instructor.getId());
+			}
 		} catch (SQLException exception) {
 			throw new IllegalStateException("Failed to update instructor.", exception);
 		}
@@ -108,7 +111,10 @@ public class JdbcInstructorRepository implements InstructorRepository {
 		try (Connection connection = connectionManager.getConnection();
 			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.deleteById"))) {
 			statement.setLong(1, instructorId);
-			statement.executeUpdate();
+			int affectedRows = statement.executeUpdate();
+			if (affectedRows == 0) {
+				throw new IllegalStateException("No instructor deleted for id: " + instructorId);
+			}
 		} catch (SQLException exception) {
 			throw new IllegalStateException("Failed to delete instructor.", exception);
 		}
