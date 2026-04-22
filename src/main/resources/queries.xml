@@ -45,6 +45,35 @@
         WHERE id = ?
     ]]></query>
 
+    <query id="course.findAll"><![CDATA[
+        SELECT id, title, description, price, level, instructor_id
+        FROM course
+        ORDER BY id ASC
+    ]]></query>
+
+    <query id="course.findById"><![CDATA[
+        SELECT id, title, description, price, level, instructor_id
+        FROM course
+        WHERE id = ?
+    ]]></query>
+
+    <query id="course.update"><![CDATA[
+        UPDATE course
+        SET title = ?, description = ?, price = ?, level = ?, instructor_id = ?
+        WHERE id = ?
+    ]]></query>
+
+    <query id="course.deleteById"><![CDATA[
+        DELETE FROM course
+        WHERE id = ?
+    ]]></query>
+
+    <query id="course.existsByInstructorId"><![CDATA[
+        SELECT 1
+        FROM course
+        WHERE instructor_id = ?
+    ]]></query>
+
     <query id="content.insert"><![CDATA[
         INSERT INTO content (title, content_type, content, seq, course_id)
         VALUES (?, ?, ?, ?, ?)

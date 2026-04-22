@@ -139,6 +139,24 @@ class InstructorServiceTest {
 		}
 
 		@Override
+		public List<Course> findAll() {
+			return List.of();
+		}
+
+		@Override
+		public Optional<Course> findById(Long courseId) {
+			return Optional.empty();
+		}
+
+		@Override
+		public void update(Course course) {
+		}
+
+		@Override
+		public void deleteById(Long courseId) {
+		}
+
+		@Override
 		public boolean existsById(Long courseId) {
 			return courseId != null && courseId > 0;
 		}
