@@ -1,5 +1,7 @@
 package com.potenup.lxp.course.repository;
 
+import com.potenup.lxp.common.exception.DataAccessException;
+import com.potenup.lxp.common.exception.NotFoundException;
 import com.potenup.lxp.common.jdbc.JdbcConnectionManager;
 import com.potenup.lxp.common.query.QueryRegistry;
 import com.potenup.lxp.course.domain.Course;
@@ -24,11 +26,11 @@ public class JdbcCourseRepository implements CourseRepository {
     }
 
     @Override
-	public Long save(Course course) {
-		try (Connection connection = connectionManager.getConnection();
+    public Long save(Course course) {
+        try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(
-                     queryRegistry.get("course.insert"),
-                     Statement.RETURN_GENERATED_KEYS
+                 queryRegistry.get("course.insert"),
+                 Statement.RETURN_GENERATED_KEYS
              )) {
             statement.setString(1, course.getTitle());
             statement.setString(2, course.getDescription());
@@ -42,9 +44,9 @@ public class JdbcCourseRepository implements CourseRepository {
                     return generatedKeys.getLong(1);
                 }
             }
-            throw new IllegalStateException("Failed to retrieve generated course id.");
+            throw new DataAccessException("Failed to retrieve generated course id.");
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to save course.", exception);
+            throw new DataAccessException("Failed to save course.", exception);
         }
     }
 
@@ -59,7 +61,7 @@ public class JdbcCourseRepository implements CourseRepository {
             }
             return courses;
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to load courses.", exception);
+            throw new DataAccessException("Failed to load courses.", exception);
         }
     }
 
@@ -76,7 +78,7 @@ public class JdbcCourseRepository implements CourseRepository {
                 return Optional.empty();
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to load course.", exception);
+            throw new DataAccessException("Failed to load course.", exception);
         }
     }
 
@@ -90,21 +92,29 @@ public class JdbcCourseRepository implements CourseRepository {
             statement.setString(4, course.getLevel().name().toLowerCase());
             statement.setLong(5, course.getInstructorId());
             statement.setLong(6, course.getId());
-            statement.executeUpdate();
+
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                throw new NotFoundException("No course updated for id: " + course.getId());
+            }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to update course.", exception);
+            throw new DataAccessException("Failed to update course.", exception);
         }
     }
 
     @Override
-    public void deleteById(Long courseId) {
+    public boolean deleteById(Long courseId) {
         try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(queryRegistry.get("course.deleteById"))) {
             statement.setLong(1, courseId);
-            statement.executeUpdate();
+            int affectedRows = statement.executeUpdate();
+            if (affectedRows == 0) {
+                return false;
+            }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to delete course.", exception);
+            throw new DataAccessException("Failed to delete course.", exception);
         }
+        return true;
     }
 
     @Override
@@ -117,7 +127,7 @@ public class JdbcCourseRepository implements CourseRepository {
                 return resultSet.next();
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to check course existence.", exception);
+            throw new DataAccessException("Failed to check course existence.", exception);
         }
     }
 
@@ -131,18 +141,18 @@ public class JdbcCourseRepository implements CourseRepository {
                 return resultSet.next();
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to check course existence by instructor id.", exception);
+            throw new DataAccessException("Failed to check course existence by instructor id.", exception);
         }
     }
 
     private Course mapCourse(ResultSet resultSet) throws SQLException {
         return new Course(
-                resultSet.getLong("id"),
-                resultSet.getString("title"),
-                resultSet.getString("description"),
-                resultSet.getInt("price"),
-                CourseLevel.valueOf(resultSet.getString("level").toUpperCase()),
-                resultSet.getLong("instructor_id")
+            resultSet.getLong("id"),
+            resultSet.getString("title"),
+            resultSet.getString("description"),
+            resultSet.getInt("price"),
+            CourseLevel.valueOf(resultSet.getString("level").toUpperCase()),
+            resultSet.getLong("instructor_id")
         );
     }
 }
