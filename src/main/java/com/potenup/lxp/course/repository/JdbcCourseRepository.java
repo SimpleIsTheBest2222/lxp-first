@@ -2,6 +2,7 @@ package com.potenup.lxp.course.repository;
 
 import com.potenup.lxp.common.exception.DataAccessException;
 import com.potenup.lxp.common.exception.NotFoundException;
+import com.potenup.lxp.common.exception.ValidationException;
 import com.potenup.lxp.common.jdbc.JdbcConnectionManager;
 import com.potenup.lxp.common.query.QueryRegistry;
 import com.potenup.lxp.course.domain.Course;
@@ -151,8 +152,15 @@ public class JdbcCourseRepository implements CourseRepository {
             resultSet.getString("title"),
             resultSet.getString("description"),
             resultSet.getInt("price"),
-            CourseLevel.valueOf(resultSet.getString("level").toUpperCase()),
+			parseCourseLevel(resultSet.getString("level")),
             resultSet.getLong("instructor_id")
         );
     }
+	private CourseLevel parseCourseLevel(String level) {
+		try {
+			return CourseLevel.fromInput(level);
+		} catch (ValidationException exception) {
+			throw new DataAccessException("Invalid course level stored in database: " + level, exception);
+		}
+	}
 }
