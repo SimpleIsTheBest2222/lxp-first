@@ -1,6 +1,8 @@
 package com.potenup.lxp.instructor.service;
 
 import com.potenup.lxp.common.exception.ConstraintViolationException;
+import com.potenup.lxp.common.exception.NotFoundException;
+import com.potenup.lxp.common.exception.ValidationException;
 import com.potenup.lxp.instructor.domain.Instructor;
 import com.potenup.lxp.instructor.dto.InstructorCreateRequest;
 import com.potenup.lxp.instructor.dto.InstructorUpdateRequest;
@@ -38,12 +40,32 @@ class InstructorServiceTest {
     }
 
     @Test
+    void createInstructorThrowsValidationExceptionWhenNameIsBlank() {
+        ValidationException exception = assertThrows(
+            ValidationException.class,
+            () -> instructorService.createInstructor(new InstructorCreateRequest("", "Java and DB instructor"))
+        );
+
+        assertTrue(exception.getMessage() != null && !exception.getMessage().isBlank());
+    }
+
+    @Test
     void getInstructorsReturnsAllInstructors() {
         // 서비스가 저장소의 강사 목록을 그대로 반환하는지 확인한다.
         List<Instructor> instructors = instructorService.getInstructors();
 
         assertEquals(2, instructors.size());
         assertEquals("Kim", instructors.get(0).getName());
+    }
+
+    @Test
+    void getInstructorThrowsNotFoundExceptionWhenInstructorDoesNotExist() {
+        NotFoundException exception = assertThrows(
+            NotFoundException.class,
+            () -> instructorService.getInstructor(99L)
+        );
+
+        assertTrue(exception.getMessage() != null && !exception.getMessage().isBlank());
     }
 
     @Test
