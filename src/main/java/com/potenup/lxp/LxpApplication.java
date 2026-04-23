@@ -3,8 +3,11 @@ package com.potenup.lxp;
 import com.potenup.lxp.common.jdbc.DatabaseConfig;
 import com.potenup.lxp.common.jdbc.JdbcConnectionManager;
 import com.potenup.lxp.common.query.QueryRegistry;
+import com.potenup.lxp.course.cli.CourseCliHandler;
+import com.potenup.lxp.course.controller.CourseController;
 import com.potenup.lxp.course.repository.CourseRepository;
 import com.potenup.lxp.course.repository.JdbcCourseRepository;
+import com.potenup.lxp.course.service.CourseService;
 import com.potenup.lxp.instructor.cli.InstructorCliHandler;
 import com.potenup.lxp.instructor.controller.InstructorController;
 import com.potenup.lxp.instructor.repository.InstructorRepository;
@@ -20,17 +23,24 @@ public class LxpApplication {
         QueryRegistry queryRegistry = QueryRegistry.fromXmlResource("/queries.xml");
 
         InstructorRepository instructorRepository = new JdbcInstructorRepository(connectionManager, queryRegistry);
-        CourseRepository courseRepository = new JdbcCourseRepository(connectionManager);
+        CourseRepository courseRepository = new JdbcCourseRepository(connectionManager, queryRegistry);
         InstructorService instructorService = new InstructorService(instructorRepository, courseRepository);
         InstructorController instructorController = new InstructorController(instructorService);
+        CourseService courseService = new CourseService(courseRepository, instructorRepository);
+        CourseController courseController = new CourseController(courseService);
 
         try (Scanner scanner = new Scanner(System.in)) {
             InstructorCliHandler instructorCliHandler = new InstructorCliHandler(instructorController, scanner);
-            runMainMenu(instructorCliHandler, scanner);
+            CourseCliHandler courseCliHandler = new CourseCliHandler(courseController, scanner);
+            runMainMenu(courseCliHandler, instructorCliHandler, scanner);
         }
     }
 
-    private static void runMainMenu(InstructorCliHandler instructorCliHandler, Scanner scanner) {
+    private static void runMainMenu(
+            CourseCliHandler courseCliHandler,
+            InstructorCliHandler instructorCliHandler,
+            Scanner scanner
+    ) {
         while (true) {
             printTitle("강의 관리 콘솔");
             System.out.println("1. 강의 관리");
@@ -39,7 +49,7 @@ public class LxpApplication {
 
             int choice = readInt(scanner, "선택 > ");
             if (choice == 1) {
-                System.out.println("강의 관리는 아직 구현되지 않았습니다.");
+                courseCliHandler.run();
             } else if (choice == 2) {
                 instructorCliHandler.run();
             } else if (choice == 3) {

@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+// XML에 정의된 SQL 문장을 id로 조회할 수 있게 보관하는 레지스트리다.
 public class QueryRegistry {
 	private static final String QUERY_TAG = "query";
 	private static final String QUERY_ID_ATTRIBUTE = "id";
