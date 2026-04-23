@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// JDBC를 사용해 instructor 테이블에 접근하는 저장소 구현체다.
 public class JdbcInstructorRepository implements InstructorRepository {
 	private final JdbcConnectionManager connectionManager;
 	private final QueryRegistry queryRegistry;
@@ -25,10 +26,11 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public Long save(Instructor instructor) {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(
-					 queryRegistry.get("instructor.insert"),
-					 Statement.RETURN_GENERATED_KEYS
+		     PreparedStatement statement = connection.prepareStatement(
+				 queryRegistry.get("instructor.insert"),
+				 Statement.RETURN_GENERATED_KEYS
 			 )) {
+			// 도메인 객체 값을 PreparedStatement에 바인딩해서 SQL 인젝션을 피한다.
 			statement.setString(1, instructor.getName());
 			statement.setString(2, instructor.getIntroduction());
 			statement.executeUpdate();
@@ -47,10 +49,11 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public boolean existsById(Long instructorId) {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.existsById"))) {
+		     PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.existsById"))) {
 			statement.setLong(1, instructorId);
 
 			try (ResultSet resultSet = statement.executeQuery()) {
+				// 존재 여부만 필요하므로 첫 행이 있는지만 확인한다.
 				return resultSet.next();
 			}
 		} catch (SQLException exception) {
@@ -61,10 +64,11 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public List<Instructor> findAll() {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.findAll"));
-			 ResultSet resultSet = statement.executeQuery()) {
+		     PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.findAll"));
+		     ResultSet resultSet = statement.executeQuery()) {
 			List<Instructor> instructors = new ArrayList<>();
 			while (resultSet.next()) {
+				// ResultSet 한 행을 도메인 객체로 변환해 목록에 담는다.
 				instructors.add(mapInstructor(resultSet));
 			}
 			return instructors;
@@ -76,7 +80,7 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public Optional<Instructor> findById(Long instructorId) {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.findById"))) {
+		     PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.findById"))) {
 			statement.setLong(1, instructorId);
 
 			try (ResultSet resultSet = statement.executeQuery()) {
@@ -93,11 +97,15 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public void update(Instructor instructor) {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.update"))) {
+		     PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.update"))) {
 			statement.setString(1, instructor.getName());
 			statement.setString(2, instructor.getIntroduction());
 			statement.setLong(3, instructor.getId());
-			statement.executeUpdate();
+			int affectedRows = statement.executeUpdate();
+			// 수정 대상이 없으면 호출 측에서 이상 상태를 알 수 있도록 예외로 처리한다.
+			if (affectedRows == 0) {
+				throw new IllegalStateException("No instructor updated for id: " + instructor.getId());
+			}
 		} catch (SQLException exception) {
 			throw new IllegalStateException("Failed to update instructor.", exception);
 		}
@@ -106,19 +114,24 @@ public class JdbcInstructorRepository implements InstructorRepository {
 	@Override
 	public void deleteById(Long instructorId) {
 		try (Connection connection = connectionManager.getConnection();
-			 PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.deleteById"))) {
+		     PreparedStatement statement = connection.prepareStatement(queryRegistry.get("instructor.deleteById"))) {
 			statement.setLong(1, instructorId);
-			statement.executeUpdate();
+			int affectedRows = statement.executeUpdate();
+			// 이미 삭제되었거나 없는 id라면 0건 반영되므로 실패로 본다.
+			if (affectedRows == 0) {
+				throw new IllegalStateException("No instructor deleted for id: " + instructorId);
+			}
 		} catch (SQLException exception) {
 			throw new IllegalStateException("Failed to delete instructor.", exception);
 		}
 	}
 
 	private Instructor mapInstructor(ResultSet resultSet) throws SQLException {
+		// JDBC 결과를 도메인 규칙을 가진 Instructor 객체로 복원한다.
 		return new Instructor(
-				resultSet.getLong("id"),
-				resultSet.getString("name"),
-				resultSet.getString("introduction")
+			resultSet.getLong("id"),
+			resultSet.getString("name"),
+			resultSet.getString("introduction")
 		);
 	}
 }

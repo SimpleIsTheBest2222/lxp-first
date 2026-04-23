@@ -24,8 +24,8 @@ public class JdbcCourseRepository implements CourseRepository {
     }
 
     @Override
-    public Long save(Course course) {
-        try (Connection connection = connectionManager.getConnection();
+	public Long save(Course course) {
+		try (Connection connection = connectionManager.getConnection();
              PreparedStatement statement = connection.prepareStatement(
                      queryRegistry.get("course.insert"),
                      Statement.RETURN_GENERATED_KEYS
