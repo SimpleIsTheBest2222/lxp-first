@@ -7,6 +7,7 @@ import com.potenup.lxp.instructor.service.InstructorService;
 
 import java.util.List;
 
+// CLI와 서비스 계층 사이에서 강사 관련 요청을 전달하는 컨트롤러다.
 public class InstructorController {
 	private final InstructorService instructorService;
 
