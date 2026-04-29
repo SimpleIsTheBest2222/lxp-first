@@ -1,5 +1,6 @@
 package com.potenup.lxp.course.cli;
 
+import com.potenup.lxp.common.exception.LxpException;
 import com.potenup.lxp.course.controller.CourseController;
 import com.potenup.lxp.course.domain.Course;
 import com.potenup.lxp.course.domain.CourseLevel;
@@ -47,15 +48,15 @@ public class CourseCliHandler {
             String title = readLine("제목 > ");
             String description = readLine("설명 > ");
             int price = readInt("가격 > ");
-            CourseLevel level = readCourseLevel("난이도(LOW/MEDIUM/HIGH) > ");
+            CourseLevel level = readCourseLevel("레벨(LOW/MEDIUM/HIGH) > ");
             Long instructorId = readLong("강사 ID > ");
 
             try {
                 Long courseId = courseController.createCourse(
-                        new CourseCreateRequest(title, description, price, level, instructorId)
+                    new CourseCreateRequest(title, description, price, level, instructorId)
                 );
                 System.out.println("강의가 등록되었습니다. id: " + courseId);
-            } catch (IllegalArgumentException exception) {
+            } catch (LxpException exception) {
                 System.out.println(exception.getMessage());
                 continue;
             }
@@ -72,6 +73,9 @@ public class CourseCliHandler {
             }
             if (choice == 2) {
                 showListScreen();
+            } else {
+                System.out.println("잘못된 메뉴입니다.");
+                continue;
             }
             return;
         }
@@ -114,8 +118,8 @@ public class CourseCliHandler {
 
             try {
                 course = courseController.getCourse(courseId);
-            } catch (IllegalArgumentException exception) {
-                System.out.println("존재하지 않는 강의입니다.");
+            } catch (LxpException exception) {
+                System.out.println(exception.getMessage());
                 return;
             }
 
@@ -132,9 +136,13 @@ public class CourseCliHandler {
             if (choice == 1) {
                 showUpdateScreen(course);
             } else if (choice == 2) {
-                courseController.deleteCourse(courseId);
-                System.out.println("삭제가 완료되었습니다. id: " + courseId);
-                return;
+                try {
+                    courseController.deleteCourse(courseId);
+                    System.out.println("삭제가 완료되었습니다. id: " + courseId);
+                    return;
+                } catch (LxpException exception) {
+                    System.out.println(exception.getMessage());
+                }
             } else if (choice == 3) {
                 return;
             } else {
@@ -143,24 +151,26 @@ public class CourseCliHandler {
         }
     }
 
-    private void showUpdateScreen(Course course) {
+    private void showUpdateScreen(Course currentCourse) {
+        Course course = currentCourse;
         while (true) {
             printTitle("강의 수정");
-            System.out.println("빈 값 입력 시 기존 값이 유지됩니다.");
+            System.out.println("빈 값을 입력하면 기존 값이 유지됩니다.");
             String title = readLine("제목(" + course.getTitle() + ") > ");
             String description = readLine("설명(" + course.getDescription() + ") > ");
             Integer price = readOptionalInt("가격(" + course.getPrice() + ") > ");
-            CourseLevel level = readOptionalCourseLevel("난이도(" + course.getLevel() + ") > ");
+            CourseLevel level = readOptionalCourseLevel("레벨(" + course.getLevel() + ") > ");
             Long instructorId = readOptionalLong("강사 ID(" + course.getInstructorId() + ") > ");
 
             try {
                 Course updatedCourse = courseController.updateCourse(
-                        course.getId(),
-                        new CourseUpdateRequest(title, description, price, level, instructorId)
+                    course.getId(),
+                    new CourseUpdateRequest(title, description, price, level, instructorId)
                 );
                 System.out.println("수정되었습니다.");
                 printCourseDetail(updatedCourse);
-            } catch (IllegalArgumentException exception) {
+                course = updatedCourse;
+            } catch (LxpException exception) {
                 System.out.println(exception.getMessage());
                 continue;
             }
@@ -177,8 +187,13 @@ public class CourseCliHandler {
                 continue;
             }
             if (choice == 2) {
-                courseController.deleteCourse(course.getId());
-                System.out.println("삭제가 완료되었습니다. id: " + course.getId());
+                try {
+                    courseController.deleteCourse(course.getId());
+                    System.out.println("삭제가 완료되었습니다. id: " + course.getId());
+                } catch (LxpException exception) {
+                    System.out.println(exception.getMessage());
+                    continue;
+                }
             }
             return;
         }
@@ -189,7 +204,7 @@ public class CourseCliHandler {
         System.out.println("제목: " + course.getTitle());
         System.out.println("설명: " + course.getDescription());
         System.out.println("가격: " + course.getPrice());
-        System.out.println("난이도: " + course.getLevel());
+        System.out.println("레벨: " + course.getLevel());
         System.out.println("강사 id: " + course.getInstructorId());
     }
 
@@ -254,8 +269,8 @@ public class CourseCliHandler {
         while (true) {
             String value = readLine(prompt);
             try {
-                return CourseLevel.valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException exception) {
+                return CourseLevel.fromInput(value);
+            } catch (LxpException exception) {
                 System.out.println("LOW, MEDIUM, HIGH 중 하나를 입력해주세요.");
             }
         }
@@ -268,8 +283,8 @@ public class CourseCliHandler {
                 return null;
             }
             try {
-                return CourseLevel.valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException exception) {
+                return CourseLevel.fromInput(value);
+            } catch (LxpException exception) {
                 System.out.println("LOW, MEDIUM, HIGH 중 하나를 입력해주세요.");
             }
         }

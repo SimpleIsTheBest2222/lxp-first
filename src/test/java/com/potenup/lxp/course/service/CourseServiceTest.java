@@ -1,5 +1,7 @@
 package com.potenup.lxp.course.service;
 
+import com.potenup.lxp.common.exception.NotFoundException;
+import com.potenup.lxp.common.exception.ValidationException;
 import com.potenup.lxp.course.domain.Course;
 import com.potenup.lxp.course.domain.CourseLevel;
 import com.potenup.lxp.course.dto.CourseCreateRequest;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CourseServiceTest {
     @Test
@@ -23,10 +26,24 @@ class CourseServiceTest {
         CourseService courseService = new CourseService(new FakeCourseRepository(), new FakeInstructorRepository());
 
         Long courseId = courseService.createCourse(
-                new CourseCreateRequest("JDBC Basics", "Intro course", 30000, CourseLevel.LOW, 1L)
+            new CourseCreateRequest("JDBC Basics", "Intro course", 30000, CourseLevel.LOW, 1L)
         );
 
         assertEquals(1L, courseId);
+    }
+
+    @Test
+    void createCourseThrowsValidationExceptionWhenInstructorDoesNotExist() {
+        CourseService courseService = new CourseService(new FakeCourseRepository(), new FakeInstructorRepository());
+
+        ValidationException exception = assertThrows(
+            ValidationException.class,
+            () -> courseService.createCourse(
+                new CourseCreateRequest("JDBC Basics", "Intro course", 30000, CourseLevel.LOW, 99L)
+            )
+        );
+
+        assertTrue(exception.getMessage() != null && !exception.getMessage().isBlank());
     }
 
     @Test
@@ -40,12 +57,24 @@ class CourseServiceTest {
     }
 
     @Test
+    void getCourseThrowsNotFoundExceptionWhenCourseDoesNotExist() {
+        CourseService courseService = new CourseService(new FakeCourseRepository(), new FakeInstructorRepository());
+
+        NotFoundException exception = assertThrows(
+            NotFoundException.class,
+            () -> courseService.getCourse(99L)
+        );
+
+        assertTrue(exception.getMessage() != null && !exception.getMessage().isBlank());
+    }
+
+    @Test
     void updateCourseKeepsExistingValuesWhenBlankIsProvided() {
         CourseService courseService = new CourseService(new FakeCourseRepository(), new FakeInstructorRepository());
 
         Course updatedCourse = courseService.updateCourse(
-                1L,
-                new CourseUpdateRequest("", "", null, null, null)
+            1L,
+            new CourseUpdateRequest("", "", null, null, null)
         );
 
         assertEquals("JDBC Basics", updatedCourse.getTitle());
@@ -62,20 +91,6 @@ class CourseServiceTest {
         courseService.deleteCourse(1L);
 
         assertFalse(repository.existsById(1L));
-    }
-
-    @Test
-    void createCourseFailsWhenInstructorDoesNotExist() {
-        CourseService courseService = new CourseService(new FakeCourseRepository(), new FakeInstructorRepository());
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> courseService.createCourse(
-                        new CourseCreateRequest("JDBC Basics", "Intro course", 30000, CourseLevel.LOW, 99L)
-                )
-        );
-
-        assertEquals("강사가 존재하지 않습니다. 강사를 먼저 등록해주세요.", exception.getMessage());
     }
 
     private static class FakeCourseRepository implements CourseRepository {
@@ -99,8 +114,8 @@ class CourseServiceTest {
         @Override
         public Optional<Course> findById(Long courseId) {
             return courses.stream()
-                    .filter(course -> course.getId().equals(courseId))
-                    .findFirst();
+                .filter(course -> course.getId().equals(courseId))
+                .findFirst();
         }
 
         @Override
@@ -114,20 +129,20 @@ class CourseServiceTest {
         }
 
         @Override
-        public void deleteById(Long courseId) {
-            courses.removeIf(course -> course.getId().equals(courseId));
+        public boolean deleteById(Long courseId) {
+            return courses.removeIf(course -> course.getId().equals(courseId));
         }
 
         @Override
         public boolean existsById(Long courseId) {
             return courses.stream()
-                    .anyMatch(course -> course.getId().equals(courseId));
+                .anyMatch(course -> course.getId().equals(courseId));
         }
 
         @Override
         public boolean existsByInstructorId(Long instructorId) {
             return courses.stream()
-                    .anyMatch(course -> course.getInstructorId().equals(instructorId));
+                .anyMatch(course -> course.getInstructorId().equals(instructorId));
         }
     }
 

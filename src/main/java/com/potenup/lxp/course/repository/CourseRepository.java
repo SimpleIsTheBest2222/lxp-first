@@ -12,9 +12,9 @@ public interface CourseRepository {
 
     Optional<Course> findById(Long courseId);
 
-    void update(Course course);
+	void update(Course course);
 
-    void deleteById(Long courseId);
+    boolean deleteById(Long courseId);
 
     boolean existsById(Long courseId);
 

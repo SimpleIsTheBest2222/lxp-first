@@ -31,7 +31,8 @@ class FakeCourseRepository implements CourseRepository {
 	}
 
 	@Override
-	public void deleteById(Long courseId) {
+	public boolean deleteById(Long courseId) {
+		return false;
 	}
 
 	@Override
